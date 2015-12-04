@@ -305,6 +305,9 @@ SQL.prototype._resetSequence = function (table, attr, primaryStart) {
 //   uuid: { type: 'varbinary', length: 36, unique: true },
 //   status: { type: 'enum', values: ['enabled', 'disabled'] }
 // }
+/**
+ * @param primaryStart index The starting value of the auto index
+ */
 SQL.prototype.createTable = function (table, schema, unique, primaryStart) {
   var sql = ' CREATE TABLE IF NOT EXISTS ' + this.escape(table) + '(',
     prefixSql = '',
