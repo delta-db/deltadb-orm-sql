@@ -639,6 +639,25 @@ Adapter.prototype.test = function () {
       }, new DBExistsError());
     });
 
+    var shouldTruncate = function (priAttr, priStart) {
+      return shouldInsert().then(function () {
+        return sql.truncateTable('attrs', priAttr, priStart);
+      }).then(function () {
+        return sql.find(null, 'attrs');
+      }).then(function (results) {
+        (results.rows === null).should.eql(true);
+      });
+    };
+
+    it('should truncate', function () {
+      return shouldTruncate();
+    });
+
+    // TODO: insert after truncation and make sure sequence reset
+    it('should truncate and reset sequence', function () {
+      return shouldTruncate('id', 2);
+    });
+
   });
 };
 
