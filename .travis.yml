@@ -1,0 +1,28 @@
+language: node_js
+
+node_js:
+  - "0.12"
+
+before_script:
+  # Change postgres password
+  - sudo -u postgres psql -c "ALTER USER Postgres WITH PASSWORD 'secret'"
+
+  # Set default config
+  - cp test/config-default.js test/config.js
+
+script: npm run $COMMAND
+
+after_script: "cat ./coverage/lcov.info | ./node_modules/coveralls/bin/coveralls.js"
+
+after_failure:
+  - cat /home/travis/build/delta-db/deltadb-orm-sql/npm-debug.log
+
+env:
+  matrix:
+  - COMMAND=node-full-test
+  - COMMAND=assert-beautified
+
+branches:
+  only:
+  - master
+  - /^pull*$/

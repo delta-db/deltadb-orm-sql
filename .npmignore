@@ -1,0 +1,7 @@
+.git*
+coverage/*
+node_modules
+.DS_Store
+*~
+test/config.js
+npm-debug.log

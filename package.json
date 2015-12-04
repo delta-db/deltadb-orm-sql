@@ -1,0 +1,44 @@
+{
+  "name": "deltadb-orm-sql",
+  "version": "0.0.1",
+  "description": "DeltaDB SQL ORM",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git://github.com/delta-db/deltadb-orm-sql"
+  },
+  "keywords": [
+    "orm",
+    "sql",
+    "postgres"
+  ],
+  "author": "Geoffrey Cox",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/delta-db/deltadb-orm-sql/issues"
+  },
+  "scripts": {
+    "assert-beautified": "beautify-proj -i test -c beautify.json && beautify-proj -i scripts -c beautify.json",
+    "beautify": "beautify-proj -i test -o . -c beautify.json && beautify-proj -i scripts -o . -c beautify.json",
+    "jshint": "jshint -c .jshintrc *.js test scripts",
+    "node-test": "istanbul test --dir coverage ./node_modules/mocha/bin/_mocha test/index.js",
+    "node-full-test": "npm run jshint && npm run node-test --coverage",
+    "test": "npm run assert-beautified && npm run node-full-test"
+  },
+  "dependencies": {
+    "bluebird": "^3.0.5",
+    "deltadb-common-utils": "0.0.2",
+    "events": "^1.1.0",
+    "inherits": "^2.0.1",
+    "pg": "^4.4.2"
+  },
+  "devDependencies": {
+    "beautify-proj": "0.0.4",
+    "chai": "^3.4.1",
+    "chai-as-promised": "^5.1.0",
+    "coveralls": "^2.11.4",
+    "istanbul": "^0.4.0",
+    "jshint": "^2.8.0",
+    "mocha": "^2.3.4"
+  }
+}
