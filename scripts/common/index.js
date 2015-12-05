@@ -42,7 +42,7 @@ SQL.prototype._escapeAndJoin = function (obj, raw) {
     delim = '',
     i = 1;
   utils.each(obj, function (val, key) {
-    // if (typeof val !== 'undefined') { // TODO: remove
+    // if (typeof val !== 'undefined') { // TODO: remove?
     keys += delim + self.escape(key);
     if (raw && raw[key]) {
       templates += delim + val;
@@ -51,7 +51,7 @@ SQL.prototype._escapeAndJoin = function (obj, raw) {
       values.push(val);
     }
     delim = ',';
-    // } // TODO: remove
+    // } // TODO: remove?
   });
   return {
     attrs: keys,
