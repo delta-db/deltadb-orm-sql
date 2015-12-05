@@ -623,6 +623,16 @@ Adapter.prototype.test = function () {
       });
     });
 
+    it('should select with aliases', function () {
+      return shouldInsert().then(function () {
+        return sql.find({'doc_id': 'doc_id_alias'}, 'attrs', null, ['doc_id', '=', '"1"'], null, 1);
+      }).then(function (results) {
+        testUtils.contains([{
+          doc_id_alias: 1
+        }], results.rows);
+      });
+    });
+
     it('should identify if db exists', function () {
       return sql.dbExists(dbName, host, username, password).then(function (exists) {
         exists.should.eql(true);
@@ -656,6 +666,16 @@ Adapter.prototype.test = function () {
     // TODO: insert after truncation and make sure sequence reset
     it('should truncate and reset sequence', function () {
       return shouldTruncate('id', 2);
+    });
+
+    it('should destroy', function () {
+      return shouldInsert().then(function () {
+        return sql.destroy('attrs');
+      }).then(function () {
+        return sql.find(null, 'attrs');
+      }).then(function (results) {
+        (results.rows === null).should.eql(true);
+      });
     });
 
   });
