@@ -25,6 +25,8 @@ Adapter.prototype.test = function () {
       username = config.adapters[self._name].username,
       password = config.adapters[self._name].password;
 
+    var primaryStart = 1; // starting auto index
+
     var createDatabase = function () {
       return sql.createAndUse(dbName, host, username, password).then(
         function () {
@@ -83,7 +85,7 @@ Adapter.prototype.test = function () {
           }, [{
             attrs: ['doc_id', 'name'],
             full: ['name']
-          }]);
+          }], primaryStart);
         });
     };
 
@@ -103,7 +105,7 @@ Adapter.prototype.test = function () {
     var shouldEqlDefault = function (results) {
       var rows = results.rows;
       testUtils.contains([{
-        id: 1,
+        id: primaryStart + 1,
         doc_id: 1,
         name: 'thing',
         value: 'write a song',
@@ -112,7 +114,7 @@ Adapter.prototype.test = function () {
         recorded_at: rows[0].recorded_at,
         updated_at: rows[0].updated_at
       }, {
-        id: 2,
+        id: primaryStart + 2,
         doc_id: 1,
         name: 'priority',
         value: 'high',
@@ -121,7 +123,7 @@ Adapter.prototype.test = function () {
         recorded_at: rows[1].recorded_at,
         updated_at: rows[1].updated_at
       }, {
-        id: 3,
+        id: primaryStart + 3,
         doc_id: 1,
         name: 'done',
         value: '20%',
@@ -145,7 +147,7 @@ Adapter.prototype.test = function () {
         }).then(function (results) {
           var rows = results.rows;
           testUtils.contains([{
-            id: 1,
+            id: primaryStart + 1,
             doc_id: 1,
             name: 'thing',
             value: 'write a song',
@@ -201,11 +203,13 @@ Adapter.prototype.test = function () {
     // TODO: fully test join, where, order, limit, etc...
     it('should find with where', function () {
       return shouldInsert().then(function () {
-        return sql.find(null, 'attrs', null, ['id', '=', '"1"']);
+        return sql.find(null, 'attrs', null, ['id', '=', '"' + (primaryStart + 1) +
+          '"'
+        ]);
       }).then(function (results) {
         var rows = results.rows;
         testUtils.contains([{
-          id: 1,
+          id: primaryStart + 1,
           doc_id: 1,
           name: 'thing',
           value: 'write a song',
@@ -216,22 +220,29 @@ Adapter.prototype.test = function () {
         }], rows);
       }).then(function () {
         return sql.find(null, 'attrs', null, [
-          ['id', '=', '"1"'], 'or', ['id', '=', '"2"'], 'or', ['id', '=', '"3"']
+          ['id', '=', '"' + (primaryStart + 1) + '"'], 'or', ['id', '=', '"' + (
+            primaryStart + 2) + '"'], 'or', ['id', '=', '"' + (primaryStart + 3) +
+            '"'
+          ]
         ]);
       }).then(function (results) {
         shouldEqlDefault(results);
       }).then(function () {
         return sql.find(null, 'attrs', null, [
           [
-            ['id', '=', '"1"'], 'and', ['name', '=', '"thing"']
+            ['id', '=', '"' + (primaryStart + 1) + '"'], 'and', ['name', '=',
+              '"thing"'
+            ]
           ], 'or', [
-            ['id', '=', '"2"'], 'and', ['name', '=', '"priority"']
+            ['id', '=', '"' + (primaryStart + 2) + '"'], 'and', ['name', '=',
+              '"priority"'
+            ]
           ]
         ]);
       }).then(function (results) {
         var rows = results.rows;
         testUtils.contains([{
-          id: 1,
+          id: primaryStart + 1,
           doc_id: 1,
           name: 'thing',
           value: 'write a song',
@@ -240,7 +251,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[0].recorded_at,
           updated_at: rows[0].updated_at
         }, {
-          id: 2,
+          id: primaryStart + 2,
           doc_id: 1,
           name: 'priority',
           value: 'high',
@@ -264,7 +275,7 @@ Adapter.prototype.test = function () {
       }).then(function (results) {
         var rows = results.rows;
         testUtils.contains([{
-          id: 1,
+          id: primaryStart + 1,
           doc_id: 1,
           name: 'thing',
           value: 'write a song',
@@ -285,7 +296,7 @@ Adapter.prototype.test = function () {
       }).then(function (results) {
         var rows = results.rows;
         testUtils.contains([{
-          id: 2,
+          id: primaryStart + 2,
           doc_id: 2,
           name: 'thing',
           value: 'sing a song',
@@ -316,7 +327,7 @@ Adapter.prototype.test = function () {
       }).then(function () {
         return sql.update({
           value: 'medium'
-        }, 'attrs', ['id', '=', '"2"']);
+        }, 'attrs', ['id', '=', '"' + (primaryStart + 2) + '"']);
       }).then(function (results) {
         results.affected.should.eql(1);
       }).then(function () {
@@ -324,7 +335,7 @@ Adapter.prototype.test = function () {
       }).then(function (results) {
         var rows = results.rows;
         testUtils.contains([{
-          id: 1,
+          id: primaryStart + 1,
           doc_id: 1,
           name: 'thing',
           value: 'write a song',
@@ -333,7 +344,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[0].recorded_at,
           updated_at: rows[0].updated_at
         }, {
-          id: 2,
+          id: primaryStart + 2,
           doc_id: 1,
           name: 'priority',
           value: 'medium',
@@ -342,7 +353,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[1].recorded_at,
           updated_at: rows[1].updated_at
         }, {
-          id: 3,
+          id: primaryStart + 3,
           doc_id: 1,
           name: 'done',
           value: '20%',
@@ -364,13 +375,13 @@ Adapter.prototype.test = function () {
           },
           'attrs', 'id'); // insert
       }).then(function (results) {
-        results.should.eql(4);
+        results.should.eql(primaryStart + 4);
       }).then(function () {
         return sql.find(null, 'attrs', null, null, ['id', 'asc']);
       }).then(function (results) {
         var rows = results.rows;
         testUtils.contains([{
-          id: 1,
+          id: primaryStart + 1,
           doc_id: 1,
           name: 'thing',
           value: 'write a song',
@@ -379,7 +390,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[0].recorded_at,
           updated_at: rows[0].updated_at
         }, {
-          id: 2,
+          id: primaryStart + 2,
           doc_id: 1,
           name: 'priority',
           value: 'high',
@@ -388,7 +399,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[1].recorded_at,
           updated_at: rows[1].updated_at
         }, {
-          id: 3,
+          id: primaryStart + 3,
           doc_id: 1,
           name: 'done',
           value: '20%',
@@ -397,7 +408,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[2].recorded_at,
           updated_at: rows[2].updated_at
         }, {
-          id: 4,
+          id: primaryStart + 4,
           doc_id: 1,
           name: 'status',
           value: 'assigned',
@@ -412,7 +423,7 @@ Adapter.prototype.test = function () {
             name: 'thing',
             value: 'play a song'
           },
-          'attrs', 'id', ['id', '=', '"1"']); // update
+          'attrs', 'id', ['id', '=', '"' + (primaryStart + 1) + '"']); // update
       }).then(function (results) {
         results.affected.should.eql(1);
       }).then(function () {
@@ -420,7 +431,7 @@ Adapter.prototype.test = function () {
       }).then(function (results) {
         var rows = results.rows;
         testUtils.contains([{
-          id: 1,
+          id: primaryStart + 1,
           doc_id: 1,
           name: 'thing',
           value: 'play a song',
@@ -429,7 +440,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[0].recorded_at,
           updated_at: rows[0].updated_at
         }, {
-          id: 2,
+          id: primaryStart + 2,
           doc_id: 1,
           name: 'priority',
           value: 'high',
@@ -438,7 +449,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[1].recorded_at,
           updated_at: rows[1].updated_at
         }, {
-          id: 3,
+          id: primaryStart + 3,
           doc_id: 1,
           name: 'done',
           value: '20%',
@@ -447,7 +458,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[2].recorded_at,
           updated_at: rows[2].updated_at
         }, {
-          id: 4,
+          id: primaryStart + 4,
           doc_id: 1,
           name: 'status',
           value: 'assigned',
@@ -470,7 +481,7 @@ Adapter.prototype.test = function () {
       }).then(function (results) {
         var rows = results.rows;
         testUtils.contains([{
-          id: 1,
+          id: primaryStart + 1,
           doc_id: 1,
           name: 'thing',
           value: 'play a song',
@@ -479,7 +490,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[0].recorded_at,
           updated_at: rows[0].updated_at
         }, {
-          id: 2,
+          id: primaryStart + 2,
           doc_id: 1,
           name: 'priority',
           value: 'high',
@@ -488,7 +499,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[1].recorded_at,
           updated_at: rows[1].updated_at
         }, {
-          id: 3,
+          id: primaryStart + 3,
           doc_id: 1,
           name: 'done',
           value: '20%',
@@ -497,7 +508,7 @@ Adapter.prototype.test = function () {
           recorded_at: rows[2].recorded_at,
           updated_at: rows[2].updated_at
         }, {
-          id: 4,
+          id: primaryStart + 4,
           doc_id: 1,
           name: 'status',
           value: 'assigned',
@@ -571,10 +582,10 @@ Adapter.prototype.test = function () {
         ]);
       }).then(function (results) {
         testUtils.contains([{
-          id: 1,
+          id: primaryStart + 1,
           name: 'thing'
         }, {
-          id: 2,
+          id: primaryStart + 2,
           name: 'priority'
         }], results.rows);
       });
@@ -594,7 +605,7 @@ Adapter.prototype.test = function () {
         ]);
       }).then(function (results) {
         testUtils.contains([{
-          id: 3,
+          id: primaryStart + 3,
           name: 'done'
         }], results.rows);
       });
@@ -608,6 +619,18 @@ Adapter.prototype.test = function () {
       }).then(function (results) {
         testUtils.contains([{
           doc_id: 1
+        }], results.rows);
+      });
+    });
+
+    it('should select with aliases', function () {
+      return shouldInsert().then(function () {
+        return sql.find({
+          'doc_id': 'doc_id_alias'
+        }, 'attrs', null, ['doc_id', '=', '"1"'], null, 1);
+      }).then(function (results) {
+        testUtils.contains([{
+          doc_id_alias: 1
         }], results.rows);
       });
     });
@@ -626,6 +649,35 @@ Adapter.prototype.test = function () {
       return commonTestUtils.shouldThrow(function () {
         return sql._createDatabase(dbName);
       }, new DBExistsError());
+    });
+
+    var shouldTruncate = function (priAttr, priStart) {
+      return shouldInsert().then(function () {
+        return sql.truncateTable('attrs', priAttr, priStart);
+      }).then(function () {
+        return sql.find(null, 'attrs');
+      }).then(function (results) {
+        (results.rows === null).should.eql(true);
+      });
+    };
+
+    it('should truncate', function () {
+      return shouldTruncate();
+    });
+
+    // TODO: insert after truncation and make sure sequence reset
+    it('should truncate and reset sequence', function () {
+      return shouldTruncate('id', 2);
+    });
+
+    it('should destroy', function () {
+      return shouldInsert().then(function () {
+        return sql.destroy('attrs');
+      }).then(function () {
+        return sql.find(null, 'attrs');
+      }).then(function (results) {
+        (results.rows === null).should.eql(true);
+      });
     });
 
   });
