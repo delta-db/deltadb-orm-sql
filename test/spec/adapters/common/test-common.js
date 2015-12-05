@@ -625,7 +625,9 @@ Adapter.prototype.test = function () {
 
     it('should select with aliases', function () {
       return shouldInsert().then(function () {
-        return sql.find({'doc_id': 'doc_id_alias'}, 'attrs', null, ['doc_id', '=', '"1"'], null, 1);
+        return sql.find({
+          'doc_id': 'doc_id_alias'
+        }, 'attrs', null, ['doc_id', '=', '"1"'], null, 1);
       }).then(function (results) {
         testUtils.contains([{
           doc_id_alias: 1
