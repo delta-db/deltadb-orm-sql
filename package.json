@@ -1,6 +1,6 @@
 {
   "name": "deltadb-orm-sql",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "description": "DeltaDB SQL ORM",
   "main": "index.js",
   "repository": {
