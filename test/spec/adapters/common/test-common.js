@@ -139,7 +139,8 @@ Adapter.prototype.test = function () {
             doc_id: '1',
             name: 'thing',
             value: 'write a song',
-            destroyed_at: 'NOW()'
+            destroyed_at: 'NOW()',
+            age: undefined
           },
           'attrs', 'id', ['destroyed_at'])
         .then(function () {
