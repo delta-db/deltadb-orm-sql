@@ -128,7 +128,7 @@ SQL.prototype._query = function (sql, replacements) {
       affected: results.rowCount
     };
   }).catch(function (err) {
-    if (err instanceof SocketClosedError) {
+    if (utils.errorInstanceOf(err, 'SocketClosedError')) {
       throw err;
     } else if (self._isDBMissingError(err)) {
       throw new DBMissingError(err.message);
@@ -398,7 +398,7 @@ SQL.prototype.dropAndCloseDatabase = function (db, host, username, password, por
 SQL.prototype.replace = function (record, table, id, where, raw) {
   var self = this;
   return self.insert(record, table, id, raw).catch(function (err) {
-    if (!(err instanceof SQLError)) {
+    if (!utils.errorInstanceOf(err, 'SQLError')) {
       throw err;
     }
     return self.update(record, table, where, raw);
