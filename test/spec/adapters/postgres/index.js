@@ -6,7 +6,9 @@ var SQL = require('../../../../scripts/adapters/postgres'),
   SocketClosedError = require('../../../../scripts/common/socket-closed-error'),
   utils = require('deltadb-common-utils'),
   DBMissingError = require('deltadb-common-utils/scripts/errors/db-missing-error'),
-  config = require('../../../config');
+  config = require('../../../config'),
+  Promise = require('bluebird'),
+  Connection = require('../../../../scripts/adapters/postgres/connection');
 
 describe('postgres', function () {
 
@@ -78,6 +80,28 @@ describe('postgres', function () {
       // Assume success if no error is thrown
       return sql.dropAndCloseDatabase(dbName, host, username, password);
     });
+  });
+
+  it('should handle simulatenous connections', function () {
+    var promises = [];
+    promises.push(sql.connect('postgres', host, username, password));
+    promises.push(sql.connect('postgres', host, username, password));
+    return Promise.all(promises);
+  });
+
+  it('should handle socket closure when connecting', function () {
+    var connection = new Connection(); // fake
+
+    var rejectedErr, err = new Error('my error');
+    err.code = 'EPIPE';
+
+    var reject = function (_rejectedErr) { // spy
+      rejectedErr = _rejectedErr;
+    };
+
+    connection._rejectConnectError(err, reject);
+
+    rejectedErr.name.should.eql('SocketClosedError');
   });
 
 });

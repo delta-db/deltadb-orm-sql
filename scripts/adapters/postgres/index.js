@@ -30,8 +30,17 @@ pg.on('error', function (err) {
 });
 
 SQL._onPGError = function (err) {
+  // The pg lib sometimes emits a generic error like "terminating connection due to administrator
+  // command" when the database disappears and this error does not contain any info as to which
+  // connection has been dropped. If we then try to continue to use the "problematic" connection it
+  // may not report an error. Therefore, we have to force the closure of all connections.
+  //
+  // TODO: work with the pg contributors to add connection details to this error and also allow
+  // errors to be detected when the "problematic" connection is used.
   if (SQL._onError) {
-    SQL._onError(err);
+    connections.disconnectAllConnections().then(function () {
+      SQL._onError(err);
+    });
   } else {
     throw err;
   }
@@ -129,7 +138,10 @@ SQL.prototype._query = function (sql, replacements) {
     };
   }).catch(function (err) {
     if (utils.errorInstanceOf(err, 'SocketClosedError')) {
-      throw err;
+      // We need to unregister the connection so that we can reconnect again
+      return self.close().then(function () {
+        throw err;
+      });
     } else if (self._isDBMissingError(err)) {
       throw new DBMissingError(err.message);
     } else if (self._isDBExistsError(err)) {
@@ -345,27 +357,16 @@ SQL.prototype.close = function () {
     });
 };
 
-SQL.prototype._closeOtherConnections = function (db) {
+SQL.prototype._closeConnections = function (db) {
   return this._query('SELECT pg_terminate_backend (pid) FROM pg_stat_activity WHERE datname=$1', [
     db
   ]);
 };
 
-SQL.prototype._dropDatabase = function (db, force) {
+SQL.prototype._dropDatabase = function (db) {
   // Postgres will not let you drop a DB if there are any other connections to the DB
-  var self = this,
-    promise = null;
-
-  if (force) {
-    promise = self._closeOtherConnections(db);
-  } else {
-    promise = Promise.resolve();
-  }
-
-  return promise.then(function () {
-    // return self._query('DROP DATABASE $1', [db]); // TODO: why doesn't this work?
-    return self._query('DROP DATABASE ' + self.escape(db));
-  });
+  // return this._query('DROP DATABASE $1', [db]); // TODO: why doesn't this work?
+  return this._query('DROP DATABASE ' + this.escape(db));
 };
 
 // Need to pass in host, username, password, port as may not have already connected to DB.

@@ -49,11 +49,15 @@ Connections.prototype.connect = function (db, host, username, password, port) {
   });
 };
 
-Connections.prototype._unregisterAll = function (db, host, username, password, port) {
-  var connString = this._connString(db, host, username, password, port);
+Connections.prototype._unregisterAllUsingConnString = function (connString) {
   var conn = this._connections[connString];
   delete this._connections[connString];
   return Promise.resolve(conn);
+};
+
+Connections.prototype._unregisterAll = function (db, host, username, password, port) {
+  var connString = this._connString(db, host, username, password, port);
+  return this._unregisterAllUsingConnString(connString);
 };
 
 Connections.prototype._unregister = function (id, db, host, username, password, port) {
@@ -81,14 +85,28 @@ Connections.prototype.disconnect = function (id, db, host, username, password, p
   });
 };
 
-Connections.prototype.disconnectAll = function (db, host, username, password, port) {
-  return this._unregisterAll(db, host, username, password, port).then(function (conn) {
+Connections.prototype.disconnectAllUsingConnString = function (connString) {
+  return this._unregisterAllUsingConnString(connString).then(function (conn) {
     // Is there a connection to close? There may not be a connection if this is only one connection
     // as it was previously closed via dropAndCloseDatabase().
     if (conn) {
       return conn.connection.disconnect();
     }
   });
+};
+
+Connections.prototype.disconnectAll = function (db, host, username, password, port) {
+  var connString = this._connString(db, host, username, password, port);
+  return this.disconnectAllUsingConnString(connString);
+};
+
+Connections.prototype.disconnectAllConnections = function () {
+  var self = this,
+    promises = [];
+  utils.each(this._connections, function (connection, connString) {
+    promises.push(self.disconnectAllUsingConnString(connString));
+  });
+  return Promise.all(promises);
 };
 
 module.exports = new Connections();
