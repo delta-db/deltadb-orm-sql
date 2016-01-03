@@ -82,10 +82,18 @@ Adapter.prototype.test = function () {
       }).then(function () {
         return test1.connect(dbTest, host, username, password, port);
       }).then(function () {
-        // Destroy even if being used by other clients
-        return postgres._dropDatabase(dbTest, true);
+        // Close the connections by all clients so that we can drop the database
+        return postgres._closeConnections(dbTest).catch(function () {
+          // Ignore SocketClosedError caused by forcing a closure of all connections
+        });
       }).then(function () {
-        return test2.connect(dbTest, host, username, password, port);
+        return postgres.connect(dbPostgres, host, username, password, port);
+      }).then(function () {
+        return postgres._dropDatabase(dbTest);
+      }).then(function () {
+        return test2.connect(dbTest, host, username, password, port).catch(function () {
+          // Ignore error as just want to make sure nothing blocks
+        });
       }).then(function () {
         return test1._query('SELECT NOW()').catch(function () {
           // Ignore error as just want to make sure nothing blocks
@@ -107,8 +115,14 @@ Adapter.prototype.test = function () {
       }).then(function () {
         return test1.connect(dbTest, host, username, password, port);
       }).then(function () {
-        // Destroy even if being used by other clients
-        return postgres._dropDatabase(dbTest, true);
+        // Close the connections by all clients so that we can drop the database
+        return postgres._closeConnections(dbTest).catch(function () {
+          // Ignore SocketClosedError caused by forcing a closure of all connections
+        });
+      }).then(function () {
+        return postgres.connect(dbPostgres, host, username, password, port);
+      }).then(function () {
+        return postgres._dropDatabase(dbTest);
       }).then(function () {
         return test2.dbExists(dbTest, host, username, password, port);
       }).then(function (exists) {

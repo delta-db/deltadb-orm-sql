@@ -15,6 +15,14 @@ var Connection = function (connString) {
 
 inherits(Connection, EventEmitter);
 
+Connection.prototype._rejectConnectError = function (err, reject) {
+  if (this._isSocketClosedError(err)) {
+    reject(new SocketClosedError(err.message));
+  } else {
+    reject(err);
+  }
+};
+
 Connection.prototype._connect = function () {
   var self = this;
   return new Promise(function (resolve, reject) {
@@ -22,7 +30,7 @@ Connection.prototype._connect = function () {
     pg.connect(self._connString, function (err, client, done) {
       if (err) {
         self._connecting = null;
-        reject(err);
+        self._rejectConnectError(err, reject);
       } else {
         // An error occurred, remove the client from the connection pool. A truthy value passed to
         // done will remove the connection from the pool instead of simply returning it to be
@@ -62,6 +70,13 @@ Connection.prototype._ready = function () {
   }
 };
 
+Connection.prototype._isSocketClosedError = function (err) {
+  return err.code === 'EPIPE' || err.message === 'This socket is closed.' ||
+    err.message === 'This socket has been ended by the other party' ||
+    err.message === 'terminating connection due to administrator command' ||
+    err.code === 'ECONNREFUSED';
+};
+
 Connection.prototype._query = function (sql, replacements) {
   var self = this;
   return new Promise(function (resolve, reject) {
@@ -73,9 +88,7 @@ Connection.prototype._query = function (sql, replacements) {
 
     self._client.query(sql, replacements, function (err, result) {
       if (err) {
-        if (err.code === 'EPIPE' || err.message === 'This socket is closed.' ||
-          err.message === 'This socket has been ended by the other party' ||
-          err.message === 'terminating connection due to administrator command') {
+        if (self._isSocketClosedError(err)) {
           self._close();
           reject(new SocketClosedError(err.message));
         } else {
