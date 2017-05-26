@@ -33,7 +33,7 @@
     "pg": "^4.4.2"
   },
   "devDependencies": {
-    "beautify-proj": "0.0.4",
+    "beautify-proj": "1.0.0",
     "chai": "^3.4.1",
     "chai-as-promised": "^5.1.0",
     "coveralls": "^2.11.4",
